@@ -1,0 +1,59 @@
+name: Build Windows Portable EXE
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+  release:
+    types: [ created, published ]
+
+jobs:
+  build-windows-exe:
+    name: Build Standalone Windows EXE
+    runs-on: windows-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install Python Build Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller pandas openpyxl xlsxwriter py7zr
+
+      - name: Compile Standalone Executable via PyInstaller
+        shell: bash
+        run: |
+          echo "Starting PyInstaller compilation..."
+          pyinstaller --noconsole --onefile --clean \
+            --name="ExcelMatrixPro" \
+            desktop_app.py
+          
+          echo "Build finished. Checking output dist directory:"
+          ls -lh dist/
+
+      - name: Upload Windows Portable EXE Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ExcelMatrixPro-Windows-Portable-EXE
+          path: dist/ExcelMatrixPro.exe
+          retention-days: 30
+
+      - name: Attach EXE to GitHub Release (If Triggered by Release)
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/ExcelMatrixPro.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

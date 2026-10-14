@@ -1,0 +1,6 @@
+{
+  "name": "Excel Matrix Pro - Windows 桌面版 Excel 批量处理工作台",
+  "description": "现代化 Windows 桌面风格的 Excel 批量拆分、质量分汇总、CRA 量表横表/竖表智能合并与自动化处理工具。",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,60 @@
+name: Build Offline HTML Application
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+  release:
+    types: [ created, published ]
+
+jobs:
+  build-html:
+    name: Build & Package Standalone HTML
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Build Web Application
+        run: npm run build
+
+      - name: Prepare Offline Single-File HTML Artifact
+        run: |
+          mkdir -p output
+          if [ -f "public/ExcelMatrixPro_离线版.html" ]; then
+            cp "public/ExcelMatrixPro_离线版.html" "output/ExcelMatrixPro_离线单文件版.html"
+          else
+            cp dist/index.html "output/ExcelMatrixPro_离线单文件版.html"
+          fi
+          echo "Offline HTML package created successfully in output/"
+          ls -lh output/
+
+      - name: Upload HTML Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ExcelMatrixPro-Offline-HTML
+          path: output/ExcelMatrixPro_离线单文件版.html
+          retention-days: 30
+
+      - name: Attach to GitHub Release (If Triggered by Release)
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: output/ExcelMatrixPro_离线单文件版.html
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
